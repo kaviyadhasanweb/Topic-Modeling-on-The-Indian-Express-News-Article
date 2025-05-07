@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Indian Express Topic Modeling</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #e61e25;
+            --secondary-color: #8b0000;
+            --light-color: #ffffff;
+            --gray-color: #f0f0f0;
+            --dark-color: #333333;
+            --border-radius: 8px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: var(--gray-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: var(--light-color);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .nav-links a {
+            color: var(--light-color);
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: bold;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        
+        .card {
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: var(--light-color);
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+        }
+        
+        .btn {
+            background-color: var(--primary-color);
+            color: var(--light-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .result-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .headline {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .topic-label {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: var(--light-color);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .lda-topic {
+            font-size: 14px;
+            color: var(--dark-color);
+            margin-top: 5px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: var(--border-radius);
+        }
+        
+        .alert {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        footer {
+            background-color: var(--primary-color);
+            color: var(--light-color);
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+            }
+            
+            .nav-links {
+                margin-top: 10px;
+            }
+            
+            .nav-links a {
+                margin: 0 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-newspaper"></i> Indian Express Topic Modeler
+            </div>
+            <div class="nav-links">
+                <a href="/"><i class="fas fa-home"></i> Home</a>
+                <a href="/about"><i class="fas fa-info-circle"></i> About</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-search"></i> Analysis Settings
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/" id="analysis-form">
+                    <div class="form-group">
+                        <label for="custom_url">News URL (Optional):</label>
+                        <input type="text" id="custom_url" name="custom_url" placeholder="Enter URL or leave empty for Indian Express" value="{{ custom_url }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="num_topics">Number of Topics:</label>
+                        <input type="number" id="num_topics" name="num_topics" min="2" max="10" value="{{ num_topics }}" required>
+                    </div>
+                    <button type="submit" class="btn" id="analyze-btn">
+                        <i class="fas fa-chart-pie"></i> Analyze Headlines
+                    </button>
+                </form>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing headlines... This may take a moment.</p>
+                </div>
+            </div>
+        </div>
+
+        {% if error_message %}
+        <div class="alert">
+            <i class="fas fa-exclamation-triangle"></i> {{ error_message }}
+        </div>
+        {% endif %}
+
+        {% if results %}
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list-alt"></i> Analysis Results
+            </div>
+            <div class="card-body">
+                {% for item in results %}
+                <div class="result-item">
+                    <h3 class="headline">{{ item.headline }}</h3>
+                    <div>
+                        <span class="topic-label"><i class="fas fa-tag"></i> {{ item.smart_label }}</span>
+                    </div>
+                    <div class="lda-topic">
+                        <strong><i class="fas fa-brain"></i> LDA Topic:</strong> {{ item.lda_topic }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        <p>Topic Modeling on The Indian Express News Article in Real Time</p>
+        <p>&copy; 2025 Indian Express Topic Modeler</p>
+    </footer>
+
+    <script>
+        document.getElementById('analysis-form').addEventListener('submit', function() {
+            document.getElementById('analyze-btn').disabled = true;
+            document.getElementById('loading').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
